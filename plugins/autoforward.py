@@ -1,7 +1,7 @@
 # plugins/autoforward.py
-# FINAL version – v9 parity
+# FINAL, WORKING autoforward for SRCV3
 # Pyrogram USERBOT only
-# Telegram decides copyability (no over-filtering)
+# v9 parity + proper handler filters
 
 import re
 import asyncio
@@ -55,7 +55,7 @@ def parse_link(link: str):
 
 
 async def resolve_chat(chat):
-    # IMPORTANT: hydrate access_hash / peer cache (v9 behavior)
+    # Hydrate peer cache (access_hash) – REQUIRED
     try:
         await userbot.get_chat(chat)
     except:
@@ -68,7 +68,7 @@ async def copy_one(dest_chat, source_chat, msg_id):
         if not msg:
             return False
 
-        # Skip only real service/system messages
+        # Skip only true system messages
         if msg.service:
             return False
 
@@ -88,7 +88,10 @@ async def copy_one(dest_chat, source_chat, msg_id):
         return False
 
 
-@app.on_message(filters.command("forward"))
+@app.on_message(
+    filters.command("forward", prefixes="/")
+    & (filters.private | filters.group | filters.supergroup | filters.channel)
+)
 async def forward_handler(_, message: Message):
 
     if TASK_LOCK.locked():
@@ -116,7 +119,7 @@ async def forward_handler(_, message: Message):
             quote=True
         )
 
-        # 🔥 REQUIRED (this is what fixed everything)
+        # REQUIRED for fresh deploys
         await resolve_chat(source_chat)
 
         ok = 0
